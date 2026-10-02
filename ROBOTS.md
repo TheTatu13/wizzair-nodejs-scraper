@@ -1,6 +1,6 @@
-# Robots.txt Analysis — EPAM Careers
+# Robots.txt Analysis — Wizz Air Careers
 
-Sursa: https://careers.epam.com/robots.txt
+Sursa: https://careers.wizzair.com/robots.txt
 
 ## Reguli
 

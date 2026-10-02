@@ -1,12 +1,13 @@
 /**
- * EPAM Job Scraper - Main Entry Point
+ * Wizz Air Job Scraper - Main Entry Point
  * 
- * PURPOSE: Scrapes job listings from EPAM Careers Romania API and stores them in Solr.
+ * PURPOSE: Scrapes job listings from Wizz Air Careers and stores them in Solr.
  * This is the primary orchestrator that coordinates company validation, job scraping,
  * data transformation, and Solr storage.
  */
 
-import fetch from "node-fetch";
+import { fetchWithRetry as fetch, assertCanary } from "./src/premium.js";
+import * as cheerio from "cheerio";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import { validateAndGetCompany } from "./company.js";
@@ -20,7 +21,6 @@ import companyConfig from "./config/company.js";
 
 const COMPANY_CIF = companyConfig.cif;
 const JOB_BASE = companyConfig.apiBase;
-const ROMANIA_COUNTRY_ID = companyConfig.apiCountryId;
 
 // Request timeout in milliseconds (10 seconds)
 const TIMEOUT = 10000;
@@ -89,163 +89,118 @@ async function searchANOFM(cif) {
 }
 
 // ============================================================================
-// API FUNCTIONS - Fetching data from EPAM Careers
+// WIZZ AIR CAREERS (SAP SuccessFactors career site)
+// Source of truth = sitemap.xml (every open job) + one HTML page per job.
+// The geo line looks like "Otopeni, RO, 75100": we keep only country code RO.
 // ============================================================================
 
+const SITEMAP_URL = `${JOB_BASE}/sitemap.xml`;
+const PAGE_DELAY_MS = 400;
+const BROWSER_HEADERS = {
+  "User-Agent": "job_seeker_ro_spider",
+  "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+};
+
 /**
- * Fetches a single page of jobs from EPAM Careers API
- * @param {number} pageNum - Page number (1-indexed)
- * @returns {Promise<Object>} - API response with job data
+ * Extracts every job URL from the sitemap XML
+ * @param {string} xml - Raw sitemap.xml
+ * @returns {string[]} - Unique absolute job URLs
  */
-async function fetchJobsPage(pageNum) {
-  // Calculate offset for pagination (API uses 0-based indexing)
-  const from = (pageNum - 1) * PAGE_SIZE;
-  
-  // Build EPAM API URL with filters for Romania jobs only
-  const url = `https://careers.epam.com/api/jobs/v2/search/careers-i18n?from=${from}&lang=en&size=${PAGE_SIZE}&sortBy=relevance%3Brelocation%3Dasc&websiteLocale=en-us&facets=country%3D${ROMANIA_COUNTRY_ID}`;
-  
-  const res = await fetch(url, {
-    headers: {
-      "User-Agent": "job_seeker_ro_spider",
-      "Accept": "application/json"
-    }
-  });
-  
-  if (!res.ok) {
-    throw new Error(`API error ${res.status} for page=${pageNum}`);
-  }
-  
-  const data = await res.json();
-  return data;
+export function parseSitemap(xml) {
+  const urls = [...String(xml || "").matchAll(/<loc>\s*(https?:\/\/[^<\s]+\/job\/[^<\s]+)\s*<\/loc>/g)].map((m) => m[1]);
+  return [...new Set(urls)];
 }
 
-// ============================================================================
-// DATA PARSING - Converting API response to our job model
-// ============================================================================
-
 /**
- * Parses raw API response into our standardized job format
- * @param {Object} apiData - Raw response from EPAM API
- * @returns {Object} - Object containing jobs array and total count
+ * Parses one job page. Every field has fallbacks (premium rule: no single fragile selector).
+ * @param {string} html - Job page HTML
+ * @param {string} url - Job URL (used as unique key)
+ * @returns {Object|null} - { url, title, city, country, datePosted } or null when unusable
  */
-function parseApiJobs(apiData) {
-  // Extract jobs array from API response (handle missing data gracefully)
-  const jobs = apiData.data?.jobs || [];
-  const total = apiData.data?.total || 0;
-  
+export function parseJobPage(html, url) {
+  const $ = cheerio.load(html || "");
+
+  const title =
+    $("[itemprop='title']").first().text().trim() ||
+    $("h1").first().text().trim() ||
+    $("title").first().text().replace(/\s*Job Details.*$/i, "").trim();
+
+  const geo =
+    $(".jobGeoLocation").first().text().trim() ||
+    $("meta[itemprop='streetAddress']").attr("content") ||
+    "";
+  const parts = geo.split(",").map((s) => s.trim()).filter(Boolean);
+  const city = parts[0] || "";
+  const country = (parts[1] || "").toUpperCase();
+
+  const canonical = $("link[rel='canonical']").attr("href") || url;
+  if (!title) return null;
+
   return {
-    jobs: jobs.map(job => {
-      // Determine work mode based on vacancy type
-      // Maps EPAM's vacancy_type to our standardized: remote, on-site, or hybrid
-      const vacancyType = job.vacancy_type || "Hybrid";
-      let workmode = "hybrid";
-      if (vacancyType.toLowerCase().includes("remote")) workmode = "remote";
-      else if (vacancyType.toLowerCase().includes("office")) workmode = "on-site";
-      
-      // Extract location - prefer city names, fallback to country
-      const location = [];
-      if (job.city && job.city.length > 0) {
-        for (const c of job.city) {
-          if (c.name) location.push(c.name);
-        }
-      } else if (job.country?.[0]?.name) {
-        location.push(job.country[0].name);
-      }
-      
-      // Build job URL - use SEO URL if available, otherwise construct from UID
-      const uid = job.uid || "";
-      const seoUrl = job.seo?.url || `/en/vacancy/${uid}_en`;
-      const url = seoUrl.startsWith('http') ? seoUrl : `${JOB_BASE}${seoUrl}`;
-      
-      // Normalize skill tags to lowercase for consistency
-      const tags = (job.skills || []).map(s => s.toLowerCase());
-      
-      // Return standardized job object
-      return {
-        url,
-        title: job.name,
-        uid: job.uid,
-        workmode,
-        location,
-        tags
-      };
-    }),
-    total
+    url: canonical,
+    title,
+    city,
+    country,
+    datePosted: $("meta[itemprop='datePosted']").attr("content") || undefined
   };
 }
 
+async function fetchText(url) {
+  const res = await fetch(url, { headers: BROWSER_HEADERS, timeout: TIMEOUT });
+  if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
+  return await res.text();
+}
+
 // ============================================================================
-// SCRAPING LOGIC - Paginated collection of all jobs
+// SCRAPING LOGIC
 // ============================================================================
 
 /**
- * Scrapes all job listings from EPAM by iterating through paginated API responses
- * @param {boolean} testOnlyOnePage - If true, stops after first page (for testing)
- * @returns {Promise<Array>} - Array of unique job objects
+ * Scrapes all Romanian jobs from Wizz Air careers
+ * @param {boolean} testOnlyOnePage - If true, inspects only the first 5 job pages (for testing)
+ * @returns {Promise<Array>} - Array of unique job objects { url, title, location }
  */
 async function scrapeAllListings(testOnlyOnePage = false) {
-  const allJobs = [];
-  const seenUrls = new Set(); // Track seen URLs to avoid duplicates
-  let page = 1;
-  let totalJobs = 0;
-  const MAX_PAGES = 10; // Safety limit to prevent infinite loops
+  console.log(`Fetching sitemap: ${SITEMAP_URL}`);
+  const sitemapUrls = parseSitemap(await fetchText(SITEMAP_URL));
+  console.log(`Total jobs on site: ${sitemapUrls.length}`);
 
-  // Paginate through all job listings
-  while (true) {
-    console.log(`Fetching API page: ${page}`);
-    const data = await fetchJobsPage(page);
-    const result = parseApiJobs(data);
-    const jobs = result.jobs;
-
-    // Stop if no jobs found on this page
-    if (!jobs.length) {
-      console.log(`No jobs found on page ${page}, stopping.`);
-      break;
-    }
-
-    // Capture total count from first page response
-    if (page === 1) {
-      totalJobs = result.total;
-      console.log(`Total jobs on site: ${totalJobs}`);
-    }
-
-    // Collect unique jobs (avoid duplicates across pages)
-    let newJobs = 0;
-    for (const job of jobs) {
-      if (!seenUrls.has(job.url)) {
-        seenUrls.add(job.url);
-        allJobs.push(job);
-        newJobs++;
-      }
-    }
-    console.log(`Page ${page}: ${jobs.length} jobs, ${newJobs} new (total: ${allJobs.length})`);
-
-    // Test mode: stop after first page
-    if (testOnlyOnePage) {
-      console.log("Test mode: stopping after page 1.");
-      break;
-    }
-
-    // Safety: stop after max pages
-    if (page >= MAX_PAGES) {
-      console.log(`Max pages (${MAX_PAGES}) reached, stopping.`);
-      break;
-    }
-
-    // Stop if no new jobs (we've seen everything)
-    if (newJobs === 0) {
-      console.log(`No new jobs on page ${page}, stopping.`);
-      break;
-    }
-
-    page += 1;
-    await sleep(1000); // Respectful delay between pages
+  // Canary: a careers site with 0 jobs in the sitemap means the layout/endpoint changed
+  if (sitemapUrls.length === 0) {
+    throw new Error("Sitemap contains no job URLs - the careers site probably changed");
   }
 
-  console.log(`Total unique jobs collected: ${allJobs.length}`);
+  const urls = testOnlyOnePage ? sitemapUrls.slice(0, 5) : sitemapUrls;
+  const allJobs = [];
+  const seenUrls = new Set();
+  let failedPages = 0;
+
+  for (const url of urls) {
+    try {
+      const job = parseJobPage(await fetchText(url), url);
+      if (!job) {
+        console.log(`  Skipping (no title): ${url}`);
+        failedPages++;
+      } else if (job.country === "RO" && !seenUrls.has(job.url)) {
+        seenUrls.add(job.url);
+        allJobs.push({ url: job.url, title: job.title, location: job.city ? [job.city] : undefined });
+        console.log(`  RO job: ${job.title} (${job.city})`);
+      }
+    } catch (err) {
+      failedPages++;
+      console.log(`  Page failed (${err.message})`);
+    }
+    await sleep(PAGE_DELAY_MS);
+  }
+
+  // If most pages failed we cannot trust an empty/short result
+  if (failedPages > urls.length / 2) {
+    throw new Error(`Too many job pages failed (${failedPages}/${urls.length})`);
+  }
+
+  console.log(`Total unique Romanian jobs collected: ${allJobs.length}`);
   return allJobs;
 }
-
 // ============================================================================
 // DATA TRANSFORMATION - Preparing jobs for Solr storage
 // ============================================================================
@@ -351,7 +306,7 @@ function transformJobsForSOLR(payload) {
  * Main function that orchestrates the complete scraping workflow:
  * 1. Check existing jobs in Solr
  * 2. Validate company via ANAF
- * 3. Scrape jobs from EPAM API
+ * 3. Scrape jobs from Wizz Air Careers (sitemap + job pages)
  * 4. Transform data for Solr
  * 5. Upsert jobs to Solr
  * 6. Report summary
@@ -368,7 +323,7 @@ async function main() {
     const existingResult = await querySOLR(COMPANY_CIF);
     const existingCount = existingResult.numFound;
     console.log(`Found ${existingCount} existing jobs in SOLR`);
-    console.log("(Keeping existing jobs - will upsert EPAM Careers jobs only)");
+    console.log("(Keeping existing jobs - will upsert Wizz Air Careers jobs only)");
 
     // Step 2: Validate company data via ANAF (ensures we have correct company info)
     console.log("=== Step 2: Validate company via ANAF ===");
@@ -393,10 +348,11 @@ async function main() {
       console.log(`Note: Could not upsert company to SOLR core: ${err.message}`);
     }
     
-    // Step 3: Scrape all jobs from EPAM Careers API
+    // Step 3: Scrape all Romanian jobs from Wizz Air Careers
     const rawJobs = await scrapeAllListings(testOnlyOnePage);
     const scrapedCount = rawJobs.length;
-    console.log(`📊 Jobs scraped from EPAM Careers website: ${scrapedCount}`);
+    assertCanary({ scraped: scrapedCount, existing: existingCount, source: "careers site" });
+    console.log(`📊 Jobs scraped from Wizz Air Careers website: ${scrapedCount}`);
 
     // Step 3b: Also scrape ANOFM jobs for this CIF
     if (!testOnlyOnePage) {
@@ -415,7 +371,7 @@ async function main() {
 
     // Create payload with metadata
     const payload = {
-      source: "epam.com",
+      source: "careers.wizzair.com",
       scrapedAt: new Date().toISOString(),
       company: COMPANY_NAME,
       cif: localCif,
@@ -460,7 +416,7 @@ async function main() {
     const finalResult = await querySOLR(COMPANY_CIF);
     console.log(`\n📊 === SUMMARY ===`);
     console.log(`📊 Jobs existing in SOLR before scrape: ${existingCount}`);
-    console.log(`📊 Jobs scraped from EPAM website: ${scrapedCount}`);
+    console.log(`📊 Jobs scraped from Wizz Air website: ${scrapedCount}`);
     console.log(`📊 Jobs in SOLR after scrape: ${finalResult.numFound}`);
     console.log(`====================`);
 
@@ -474,7 +430,7 @@ async function main() {
 }
 
 // Export functions for testing
-export { parseApiJobs, mapToJobModel, transformJobsForSOLR };
+export { scrapeAllListings, mapToJobModel, transformJobsForSOLR };
 
 // Run main function when executed directly
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

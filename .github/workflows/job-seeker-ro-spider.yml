@@ -29,7 +29,7 @@ jobs:
       - name: Pre-scrape — Unit Tests
         run: |
           npm run test:unit
-          sed -i 's|<title>Test Report</title>|<title>Pre-scrape: Unit Tests — EPAM SYSTEMS INTERNATIONAL SRL</title>|;s|<h1 id="title">Test Report</h1>|<h1 id="title">Pre-scrape: Unit Tests — EPAM SYSTEMS INTERNATIONAL SRL</h1>|' test-report.html
+          sed -i 's|<title>Test Report</title>|<title>Pre-scrape: Unit Tests — WIZZ AIR MALTA LIMITED LUQA - SUCURSALA OTOPENI</title>|;s|<h1 id="title">Test Report</h1>|<h1 id="title">Pre-scrape: Unit Tests — WIZZ AIR MALTA LIMITED LUQA - SUCURSALA OTOPENI</h1>|' test-report.html
           cp test-report.html docs/test-results/pre-scrape-unit.html || true
         env:
           SOLR_AUTH: ${{ secrets.SOLR_AUTH }}
@@ -37,7 +37,7 @@ jobs:
       - name: Pre-scrape — Integration Tests
         run: |
           npm run test:integration
-          sed -i 's|<title>Test Report</title>|<title>Pre-scrape: Integration Tests — EPAM SYSTEMS INTERNATIONAL SRL</title>|;s|<h1 id="title">Test Report</h1>|<h1 id="title">Pre-scrape: Integration Tests — EPAM SYSTEMS INTERNATIONAL SRL</h1>|' test-report.html
+          sed -i 's|<title>Test Report</title>|<title>Pre-scrape: Integration Tests — WIZZ AIR MALTA LIMITED LUQA - SUCURSALA OTOPENI</title>|;s|<h1 id="title">Test Report</h1>|<h1 id="title">Pre-scrape: Integration Tests — WIZZ AIR MALTA LIMITED LUQA - SUCURSALA OTOPENI</h1>|' test-report.html
           cp test-report.html docs/test-results/pre-scrape-integration.html || true
         env:
           SOLR_AUTH: ${{ secrets.SOLR_AUTH }}
@@ -59,7 +59,7 @@ jobs:
       - name: Post-scrape — E2E Tests
         run: |
           npm run test:e2e
-          sed -i 's|<title>Test Report</title>|<title>Post-scrape: E2E Tests — EPAM SYSTEMS INTERNATIONAL SRL</title>|;s|<h1 id="title">Test Report</h1>|<h1 id="title">Post-scrape: E2E Tests — EPAM SYSTEMS INTERNATIONAL SRL</h1>|' test-report.html
+          sed -i 's|<title>Test Report</title>|<title>Post-scrape: E2E Tests — WIZZ AIR MALTA LIMITED LUQA - SUCURSALA OTOPENI</title>|;s|<h1 id="title">Test Report</h1>|<h1 id="title">Post-scrape: E2E Tests — WIZZ AIR MALTA LIMITED LUQA - SUCURSALA OTOPENI</h1>|' test-report.html
           cp test-report.html docs/test-results/post-scrape.html || true
         env:
           SOLR_AUTH: ${{ secrets.SOLR_AUTH }}
@@ -67,7 +67,7 @@ jobs:
       - name: Consistency Tests
         run: |
           npm run test:consistency
-          sed -i 's|<title>Test Report</title>|<title>Post-scrape: Consistency Tests — EPAM SYSTEMS INTERNATIONAL SRL</title>|;s|<h1 id="title">Test Report</h1>|<h1 id="title">Post-scrape: Consistency Tests — EPAM SYSTEMS INTERNATIONAL SRL</h1>|' test-report.html
+          sed -i 's|<title>Test Report</title>|<title>Post-scrape: Consistency Tests — WIZZ AIR MALTA LIMITED LUQA - SUCURSALA OTOPENI</title>|;s|<h1 id="title">Test Report</h1>|<h1 id="title">Post-scrape: Consistency Tests — WIZZ AIR MALTA LIMITED LUQA - SUCURSALA OTOPENI</h1>|' test-report.html
           cp test-report.html docs/test-results/post-scrape-consistency.html || true
         env:
           GITHUB_REPOSITORY: ${{ github.repository }}

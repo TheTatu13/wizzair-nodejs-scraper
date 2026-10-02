@@ -6,7 +6,7 @@
  *   keywords (catches soft-404s where status is 200 but the job is gone).
  *
  * Used by:
- *   - tests/validate-epam-jobs.js (CI nightly cleanup) — uses validateByHead
+ *   - tests/validate-wizzair-jobs.js (CI nightly cleanup) — uses validateByHead
  *   - validate-jobs.js (manual deep checks)            — uses validateByContent
  */
 

@@ -2,9 +2,9 @@
 
 ## Project Purpose
 
-This scraper extracts job listings from EPAM careers page (Romania only) and imports them to peviitor.ro.
+This scraper extracts job listings from Wizz Air careers page (Romania only) and imports them to peviitor.ro.
 
-Target: https://careers.epam.com/en/jobs/romania
+Target: https://careers.wizzair.com/en/jobs/romania
 
 ## Model Schemas
 
@@ -43,14 +43,14 @@ When working on this scraper:
 
 ## Workflow Steps
 
-1. **Start with brand** - We know the brand (e.g., "EPAM")
+1. **Start with brand** - We know the brand (e.g., "Wizz Air")
 2. **Search in DemoANAF** - Find company by brand, get CIF from search results
 3. **Get company details from ANAF** - Using CIF, fetch full company data from ANAF
 4. **Validate with Peviitor** - Verify company exists in Peviitor, get group/brand info
 5. **Check existing jobs in SOLR** - Query SOLR by CIF to see what jobs already exist
 6. **Check company status** - If ANAF status = "inactive" → DELETE existing jobs from SOLR and STOP
 7. **Save company.json** - Save all ANAF + Peviitor data for backup
-8. **Scrape new jobs** - Extract jobs from EPAM careers page (Romania)
+8. **Scrape new jobs** - Extract jobs from Wizz Air careers page (Romania)
 9. **Transform for SOLR** - Validate and fix job data:
    - location: Only Romanian cities allowed
    - tags: lowercase, no diacritics
@@ -71,7 +71,7 @@ node index.js
 node index.js --test
 ```
 
-> **Important**: Scraper does NOT delete jobs from other sources (ANOFM, etc). It only upserts EPAM Careers jobs. Existing jobs are preserved.
+> **Important**: Scraper does NOT delete jobs from other sources (ANOFM, etc). It only upserts Wizz Air Careers jobs. Existing jobs are preserved.
 
 ## Full Workflow (automatic)
 
@@ -79,7 +79,7 @@ When running `node index.js`, the following steps happen automatically:
 
 1. **Check existing jobs count** - Query SOLR by CIF (read-only)
 2. **Validate company via ANAF** - Check company exists and is active
-3. **Scrape jobs** - Extract jobs from EPAM careers API (Romania only)
+3. **Scrape jobs** - Extract jobs from Wizz Air careers API (Romania only)
 4. **Transform for SOLR** - Fix locations (only Romanian cities), normalize fields
 5. **Upsert to SOLR** - Add/update jobs (SOLR handles duplicates by URL)
 6. **Show Summary** - Log job counts
@@ -106,7 +106,7 @@ company.js (validate company)
     └── SOLR ──► check existing jobs count
     │
     ▼ (if active)
-scrape EPAM API (jobs for Romania)
+scrape Wizz Air API (jobs for Romania)
     │
     ▼
 transformJobsForSOLR()
@@ -137,13 +137,13 @@ generateJobsMarkdown() → docs/jobs.md
 | `src/markdown-generator.js` | Generates `docs/jobs.md` with company info and all scraped jobs |
 | `src/job-validator.js` | Shared validation primitives: `validateByHead`, `validateByContent`, `DEFAULT_EXPIRED_KEYWORDS` |
 | `demoanaf.js` | CLI entry point for ANAF module (thin wrapper around src/anaf.js) |
-| `tests/validate-epam-jobs.js` | CI fast validator (HEAD only); thin CLI over `src/job-validator.js` + `solr.js` |
+| `tests/validate-wizzair-jobs.js` | CI fast validator (HEAD only); thin CLI over `src/job-validator.js` + `solr.js` |
 | `tests/unit/index.test.js` | Unit tests for parseApiJobs, mapToJobModel, transformJobsForSOLR |
 | `tests/unit/company.test.js` | Unit tests for validateAndGetCompany and fallback caching |
 | `tests/unit/solr.test.js` | Unit tests for SOLR query, upsert, delete operations |
 | `tests/unit/demoanaf.test.js` | Unit tests for ANAF search and company retrieval |
 | `tests/integration/workflow.test.js` | Live integration tests - ANAF + SOLR |
-| `tests/e2e/scraper.test.js` | End-to-end tests with real EPAM API |
+| `tests/e2e/scraper.test.js` | End-to-end tests with real Wizz Air API |
 | `tests/consistency/public.test.js` | Verifies repo is public on GitHub |
 | `tests/consistency/repo.test.js` | Verifies branch, Pages, secrets, workflow files |
 | `tests/consistency/topics.test.js` | Verifies required repo topics |

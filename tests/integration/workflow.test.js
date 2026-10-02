@@ -55,17 +55,17 @@ describe('Integration: API Workflow', () => {
       anaf = await import('../../src/anaf.js');
     });
 
-    itIfAnaf('should search for EPAM brand and find the company', async () => {
-      const results = await anaf.searchCompany('EPAM');
+    itIfAnaf('should search for Wizz Air brand and find the company', async () => {
+      const results = await anaf.searchCompany('Wizz Air');
 
       expect(Array.isArray(results)).toBe(true);
       expect(results.length).toBeGreaterThan(0);
 
-      const epam = results.find(c =>
-        c.name.toUpperCase().includes('EPAM SYSTEMS') && c.statusLabel === 'Funcțiune'
+      const wizzair = results.find(c =>
+        c.cui.toString() === COMPANY_CIF && c.statusLabel === 'Funcțiune'
       );
-      expect(epam).toBeDefined();
-      expect(epam.cui.toString()).toBe(COMPANY_CIF);
+      expect(wizzair).toBeDefined();
+      expect(wizzair.cui.toString()).toBe(COMPANY_CIF);
     }, 15000);
 
     itIfAnaf('should return empty array for non-existent brand', async () => {
@@ -126,42 +126,42 @@ describe('Integration: API Workflow', () => {
       const result = await solr.queryCompanySOLR(`id:${COMPANY_CIF}`);
 
       expect(result.numFound).toBe(1);
-      const epam = result.docs[0];
-      expect(epam.id).toBe(COMPANY_CIF);
-      expect(epam.company).toBe('EPAM SYSTEMS INTERNATIONAL SRL');
-      expect(epam.brand).toBe('EPAM');
-      expect(epam.status).toBe('activ');
-      expect(Array.isArray(epam.location)).toBe(true);
-      expect(epam.lastScraped).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      const wizzair = result.docs[0];
+      expect(wizzair.id).toBe(COMPANY_CIF);
+      expect(wizzair.company).toBe('WIZZ AIR MALTA LIMITED LUQA - SUCURSALA OTOPENI');
+      expect(wizzair.brand).toBe('Wizz Air');
+      expect(wizzair.status).toBe('activ');
+      expect(Array.isArray(wizzair.location)).toBe(true);
+      expect(wizzair.lastScraped).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     }, 15000);
 
     itIfSolr('should have required company model fields', async () => {
       const result = await solr.queryCompanySOLR(`id:${COMPANY_CIF}`);
-      const epam = result.docs[0];
+      const wizzair = result.docs[0];
 
-      expect(epam).toHaveProperty('id', COMPANY_CIF);
-      expect(epam).toHaveProperty('company');
-      expect(epam).toHaveProperty('brand', 'EPAM');
-      expect(epam).toHaveProperty('status');
-      expect(['activ', 'suspendat', 'inactiv', 'radiat']).toContain(epam.status);
-      expect(epam).toHaveProperty('location');
-      expect(Array.isArray(epam.location)).toBe(true);
-      expect(epam).toHaveProperty('website');
-      expect(Array.isArray(epam.website)).toBe(true);
-      expect(epam.website[0]).toMatch(/^https?:\/\/.+/);
-      expect(epam).toHaveProperty('career');
-      expect(Array.isArray(epam.career)).toBe(true);
-      expect(epam.career[0]).toMatch(/^https?:\/\/.+/);
-      expect(epam).toHaveProperty('lastScraped');
-      expect(epam).toHaveProperty('scraperFile');
+      expect(wizzair).toHaveProperty('id', COMPANY_CIF);
+      expect(wizzair).toHaveProperty('company');
+      expect(wizzair).toHaveProperty('brand', 'Wizz Air');
+      expect(wizzair).toHaveProperty('status');
+      expect(['activ', 'suspendat', 'inactiv', 'radiat']).toContain(wizzair.status);
+      expect(wizzair).toHaveProperty('location');
+      expect(Array.isArray(wizzair.location)).toBe(true);
+      expect(wizzair).toHaveProperty('website');
+      expect(Array.isArray(wizzair.website)).toBe(true);
+      expect(wizzair.website[0]).toMatch(/^https?:\/\/.+/);
+      expect(wizzair).toHaveProperty('career');
+      expect(Array.isArray(wizzair.career)).toBe(true);
+      expect(wizzair.career[0]).toMatch(/^https?:\/\/.+/);
+      expect(wizzair).toHaveProperty('lastScraped');
+      expect(wizzair).toHaveProperty('scraperFile');
     }, 15000);
 
     itIfSolr('should have optional field (group) if present', async () => {
       const result = await solr.queryCompanySOLR(`id:${COMPANY_CIF}`);
-      const epam = result.docs[0];
+      const wizzair = result.docs[0];
 
-      if (epam.group !== undefined) {
-        expect(typeof epam.group).toBe('string');
+      if (wizzair.group !== undefined) {
+        expect(typeof wizzair.group).toBe('string');
       }
     }, 15000);
   });
@@ -177,7 +177,7 @@ describe('Integration: API Workflow', () => {
       const result = await solr.querySOLR(COMPANY_CIF);
 
       if (result.numFound === 0) {
-        console.log('⚠️ No EPAM jobs in Solr — skipping job field assertions (scraper may not have run yet)');
+        console.log('⚠️ No Wizz Air jobs in Solr — skipping job field assertions (scraper may not have run yet)');
         return;
       }
 
@@ -187,7 +187,7 @@ describe('Integration: API Workflow', () => {
       const job = result.docs[0];
       expect(job).toHaveProperty('url');
       expect(job).toHaveProperty('title');
-      expect(job).toHaveProperty('company', 'EPAM SYSTEMS INTERNATIONAL SRL');
+      expect(job).toHaveProperty('company', 'WIZZ AIR MALTA LIMITED LUQA - SUCURSALA OTOPENI');
       expect(job).toHaveProperty('cif', COMPANY_CIF);
       expect(job).toHaveProperty('status');
       expect(job).toHaveProperty('location');

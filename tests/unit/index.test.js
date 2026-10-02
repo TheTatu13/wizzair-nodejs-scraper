@@ -30,17 +30,17 @@ describe('index.js Component Tests', () => {
 
     it('should keep company uppercase', () => {
       const payload = {
-        source: 'epam.com',
-        company: 'epam systems international srl',
-        cif: '33159615',
+        source: 'careers.wizzair.com',
+        company: 'wizz air malta limited luqa - sucursala otopeni',
+        cif: '46966293',
         jobs: [
-          { url: 'https://test.com/1', title: 'Job 1', company: 'epam systems', cif: '33159615' }
+          { url: 'https://test.com/1', title: 'Job 1', company: 'wizzair systems', cif: '46966293' }
         ]
       };
 
       const result = index.transformJobsForSOLR(payload);
 
-      expect(result.company).toBe('EPAM SYSTEMS INTERNATIONAL SRL');
+      expect(result.company).toBe('WIZZ AIR MALTA LIMITED LUQA - SUCURSALA OTOPENI');
     });
 
     it('should normalize workmode values', () => {
@@ -70,15 +70,15 @@ describe('index.js Component Tests', () => {
   describe('mapToJobModel', () => {
     it('should map raw job to job model format', () => {
       const rawJob = {
-        url: 'https://careers.epam.com/job/123',
+        url: 'https://careers.wizzair.com/job/123',
         title: 'Senior Developer',
         location: ['Bucharest'],
         tags: ['Java', 'Spring'],
         workmode: 'hybrid'
       };
 
-      const COMPANY_NAME = 'EPAM SYSTEMS INTERNATIONAL SRL';
-      const COMPANY_CIF = '33159615';
+      const COMPANY_NAME = 'WIZZ AIR MALTA LIMITED LUQA - SUCURSALA OTOPENI';
+      const COMPANY_CIF = '46966293';
 
       const result = index.mapToJobModel(rawJob, COMPANY_CIF, COMPANY_NAME);
 
@@ -99,7 +99,7 @@ describe('index.js Component Tests', () => {
         title: 'Job 1'
       };
 
-      const result = index.mapToJobModel(rawJob, '33159615');
+      const result = index.mapToJobModel(rawJob, '46966293');
 
       expect(result.location).toBeUndefined();
       expect(result.tags).toBeUndefined();
@@ -109,112 +109,70 @@ describe('index.js Component Tests', () => {
     it('should handle missing title', () => {
       const rawJob = { url: 'https://test.com/1' };
 
-      const result = index.mapToJobModel(rawJob, '33159615');
+      const result = index.mapToJobModel(rawJob, '46966293');
 
       expect(result.title).toBeUndefined();
       expect(result.url).toBe('https://test.com/1');
     });
   });
 
-  describe('parseApiJobs', () => {
-    it('should parse EPAM API response format', () => {
-      const apiData = {
-        data: {
-          total: 100,
-          jobs: [
-            {
-              uid: '123',
-              name: 'Senior Developer',
-              city: [{ name: 'Bucharest' }],
-              country: [{ name: 'Romania' }],
-              vacancy_type: 'Hybrid',
-              skills: ['Java', 'Spring']
-            }
-          ]
-        }
-      };
+  describe('parseSitemap', () => {
+    const xml = `<?xml version="1.0"?><urlset>
+      <url><loc>https://careers.wizzair.com/job/Otopeni-Fleet-Manager-75100/1437612933/</loc></url>
+      <url><loc>https://careers.wizzair.com/job/Budapest-Pilot-1000/111/</loc></url>
+      <url><loc>https://careers.wizzair.com/job/Budapest-Pilot-1000/111/</loc></url>
+      <url><loc>https://careers.wizzair.com/go/Pilot-Jobs/5258601/</loc></url>
+    </urlset>`;
 
-      const result = index.parseApiJobs(apiData);
-
-      expect(result.jobs).toHaveLength(1);
-      expect(result.jobs[0].title).toBe('Senior Developer');
-      expect(result.jobs[0].location).toEqual(['Bucharest']);
-      expect(result.jobs[0].workmode).toBe('hybrid');
+    it('extracts unique job URLs only', () => {
+      expect(index.parseSitemap(xml)).toEqual([
+        'https://careers.wizzair.com/job/Otopeni-Fleet-Manager-75100/1437612933/',
+        'https://careers.wizzair.com/job/Budapest-Pilot-1000/111/'
+      ]);
     });
 
-    it('should handle empty job list', () => {
-      const apiData = { data: { total: 0, jobs: [] } };
-
-      const result = index.parseApiJobs(apiData);
-
-      expect(result.jobs).toEqual([]);
-    });
-
-    it('should handle missing data field', () => {
-      const result = index.parseApiJobs({});
-
-      expect(result.jobs).toEqual([]);
-    });
-
-    it('should handle multiple cities', () => {
-      const apiData = {
-        data: {
-          total: 1,
-          jobs: [
-            {
-              uid: '123',
-              name: 'Developer',
-              city: [{ name: 'Bucharest' }, { name: 'Cluj-Napoca' }],
-              country: [{ name: 'Romania' }]
-            }
-          ]
-        }
-      };
-
-      const result = index.parseApiJobs(apiData);
-
-      expect(result.jobs[0].location).toEqual(['Bucharest', 'Cluj-Napoca']);
+    it('returns an empty list for empty or broken input', () => {
+      expect(index.parseSitemap('')).toEqual([]);
+      expect(index.parseSitemap(undefined)).toEqual([]);
+      expect(index.parseSitemap('<html>blocked</html>')).toEqual([]);
     });
   });
 
-  describe('URL Generation', () => {
-    it('should use seo.url when available', () => {
-      const apiData = {
-        data: {
-          total: 1,
-          jobs: [
-            {
-              uid: 'blt123',
-              name: 'Test Job',
-              seo: { url: '/en/vacancy/test-job-blt123_en' },
-              city: [{ name: 'Bucharest' }]
-            }
-          ]
-        }
-      };
+  describe('parseJobPage', () => {
+    const page = `<html><head>
+      <title>Fleet Manager Job Details | Wizz Air Hungary Ltd.</title>
+      <link rel="canonical" href="https://careers.wizzair.com/job/Otopeni-Fleet-Manager-75100/1437612933/" />
+      <meta itemprop="datePosted" content="Wed Sep 16 00:00:00 UTC 2026">
+      </head><body><h1 itemprop="title">Fleet Manager</h1>
+      <span class="jobGeoLocation">Otopeni, RO, 75100</span></body></html>`;
 
-      const result = index.parseApiJobs(apiData);
-
-      expect(result.jobs[0].url).toBe('https://careers.epam.com/en/vacancy/test-job-blt123_en');
+    it('reads title, city, country and canonical url', () => {
+      const job = index.parseJobPage(page, 'https://careers.wizzair.com/job/x/1/');
+      expect(job.title).toBe('Fleet Manager');
+      expect(job.city).toBe('Otopeni');
+      expect(job.country).toBe('RO');
+      expect(job.url).toBe('https://careers.wizzair.com/job/Otopeni-Fleet-Manager-75100/1437612933/');
+      expect(job.datePosted).toContain('2026');
     });
 
-    it('should fallback to uid-based URL when no seo.url', () => {
-      const apiData = {
-        data: {
-          total: 1,
-          jobs: [
-            {
-              uid: 'blt456',
-              name: 'Test Job',
-              city: [{ name: 'Bucharest' }]
-            }
-          ]
-        }
-      };
+    it('falls back to <title> and the address meta when the main selectors are missing', () => {
+      const html = `<html><head><title>Cabin Crew Job Details | Wizz Air Hungary Ltd.</title>
+        <meta itemprop="streetAddress" content="Cluj-Napoca, ro, 400000"></head><body></body></html>`;
+      const job = index.parseJobPage(html, 'https://careers.wizzair.com/job/y/2/');
+      expect(job.title).toBe('Cabin Crew');
+      expect(job.city).toBe('Cluj-Napoca');
+      expect(job.country).toBe('RO');
+      expect(job.url).toBe('https://careers.wizzair.com/job/y/2/');
+    });
 
-      const result = index.parseApiJobs(apiData);
+    it('keeps non-Romanian jobs identifiable so the scraper can drop them', () => {
+      const html = '<h1>Pilot</h1><span class="jobGeoLocation">Budapest, HU, 1000</span>';
+      expect(index.parseJobPage(html, 'u').country).toBe('HU');
+    });
 
-      expect(result.jobs[0].url).toBe('https://careers.epam.com/en/vacancy/blt456_en');
+    it('returns null when there is no title at all', () => {
+      expect(index.parseJobPage('<html><body>blocked</body></html>', 'u')).toBeNull();
+      expect(index.parseJobPage('', 'u')).toBeNull();
     });
   });
 });

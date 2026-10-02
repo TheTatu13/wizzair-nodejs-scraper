@@ -49,53 +49,55 @@ const TEST_BRAND = companyConfig.brand;
 
 describe('E2E: Full Scraping Pipeline', () => {
 
-  describe('API — Real Data Fetch', () => {
-    let apiData;
+  describe('Careers site - Real Data Fetch', () => {
+    let urls;
 
     beforeAll(async () => {
-      const res = await fetch(companyConfig.apiBase + '/api/jobs/v2/search/careers-i18n?from=0&lang=en&size=5&sortBy=relevance%3Brelocation%3Dasc&websiteLocale=en-us&facets=country%3D' + companyConfig.apiCountryId, {
-        headers: {
-          'User-Agent': 'job_seeker_ro_spider',
-          'Accept': 'application/json'
-        }
+      const index = await import('../../index.js');
+      const res = await fetch(companyConfig.apiBase + '/sitemap.xml', {
+        headers: { 'User-Agent': 'job_seeker_ro_spider' }
       });
-      apiData = await res.json();
-    }, 15000);
+      expect(res.ok).toBe(true);
+      urls = index.parseSitemap(await res.text());
+    }, 20000);
 
-    it('should respond with valid job data', () => {
-      expect(apiData).toHaveProperty('data');
-      expect(apiData.data).toHaveProperty('jobs');
-      expect(Array.isArray(apiData.data.jobs)).toBe(true);
-      expect(apiData.data.jobs.length).toBeGreaterThan(0);
-    }, 10000);
+    it('sitemap should list job URLs', () => {
+      expect(urls.length).toBeGreaterThan(0);
+      for (const u of urls) {
+        expect(u).toMatch(/^https:\/\/careers\.wizzair\.com\/job\//);
+      }
+    });
   });
 
   describe('Parse + Transform Pipeline', () => {
     let index;
-    let apiData;
+    let jobs;
 
     beforeAll(async () => {
       index = await import('../../index.js');
-      const res = await fetch(companyConfig.apiBase + '/api/jobs/v2/search/careers-i18n?from=0&lang=en&size=5&sortBy=relevance%3Brelocation%3Dasc&websiteLocale=en-us&facets=country%3D' + companyConfig.apiCountryId, {
-        headers: {
-          'User-Agent': 'job_seeker_ro_spider',
-          'Accept': 'application/json'
-        }
+      const res = await fetch(companyConfig.apiBase + '/sitemap.xml', {
+        headers: { 'User-Agent': 'job_seeker_ro_spider' }
       });
-      apiData = await res.json();
-    }, 15000);
+      const urls = index.parseSitemap(await res.text());
+      jobs = [];
+      for (const url of urls.slice(0, 3)) {
+        const page = await fetch(url, { headers: { 'User-Agent': 'job_seeker_ro_spider' } });
+        const job = index.parseJobPage(await page.text(), url);
+        if (job) jobs.push(job);
+      }
+    }, 30000);
 
-    it('should parse API response into standardized format', () => {
-      const result = index.parseApiJobs(apiData);
-
-      expect(result).toHaveProperty('jobs');
-      expect(result).toHaveProperty('total');
-      expect(result.jobs.length).toBeGreaterThan(0);
+    it('should parse real job pages (title, city and country present)', () => {
+      expect(jobs.length).toBeGreaterThan(0);
+      for (const job of jobs) {
+        expect(job.title.length).toBeGreaterThan(0);
+        expect(job.city.length).toBeGreaterThan(0);
+        expect(job.country).toMatch(/^[A-Z]{2}$/);
+      }
     });
 
     it('should map parsed jobs to job model', () => {
-      const parsed = index.parseApiJobs(apiData);
-      const model = index.mapToJobModel(parsed.jobs[0], TEST_CIF);
+      const model = index.mapToJobModel({ url: jobs[0].url, title: jobs[0].title, location: [jobs[0].city] }, TEST_CIF);
 
       expect(model).toHaveProperty('url');
       expect(model).toHaveProperty('title');
@@ -105,42 +107,32 @@ describe('E2E: Full Scraping Pipeline', () => {
       expect(model).toHaveProperty('date');
     });
 
-    it('should transform jobs and filter to Romanian locations', () => {
-      const parsed = index.parseApiJobs(apiData);
-      const jobs = parsed.jobs.map(j => index.mapToJobModel(j, TEST_CIF));
-
+    it('should transform jobs and keep the company name uppercase', () => {
+      const mapped = jobs.map(j => index.mapToJobModel({ url: j.url, title: j.title, location: [j.city] }, TEST_CIF));
       const payload = {
-        source: companyConfig.brand.toLowerCase() + '.com',
+        source: 'careers.wizzair.com',
         company: companyConfig.legalName,
         cif: TEST_CIF,
-        jobs
+        jobs: mapped
       };
 
       const transformed = index.transformJobsForSOLR(payload);
 
       expect(transformed.company).toBe(companyConfig.legalName);
-      expect(transformed.jobs.length).toBe(jobs.length);
-
+      expect(transformed.jobs.length).toBe(mapped.length);
       for (const job of transformed.jobs) {
-        expect(job).toHaveProperty('location');
         expect(Array.isArray(job.location)).toBe(true);
         expect(job.location.length).toBeGreaterThan(0);
       }
     });
 
-    it('should produce valid job URLs that are accessible', async () => {
-      const parsed = index.parseApiJobs(apiData);
-
-      for (const job of parsed.jobs.slice(0, 2)) {
-        const res = await fetch(job.url, {
-          method: 'HEAD',
-          headers: { 'User-Agent': 'job_seeker_ro_spider' }
-        });
+    it('should produce job URLs that are accessible', async () => {
+      for (const job of jobs.slice(0, 2)) {
+        const res = await fetch(job.url, { method: 'HEAD', headers: { 'User-Agent': 'job_seeker_ro_spider' } });
         expect(res.ok).toBe(true);
       }
     }, 30000);
   });
-
   describe('ANAF Company Data', () => {
     let anaf;
 
@@ -170,7 +162,7 @@ describe('E2E: Full Scraping Pipeline', () => {
       const results = await anaf.searchCompany(TEST_BRAND);
 
       const comp = results.find(c =>
-        c.name.toUpperCase() === companyConfig.legalName &&
+        c.cui.toString() === TEST_CIF &&
         c.statusLabel === 'Funcțiune'
       );
       expect(comp).toBeDefined();

@@ -53,11 +53,11 @@ describe('solr.js', () => {
   describe('querySOLR', () => {
     it('should return response object with docs', async () => {
       mockFetch.mockResolvedValue(makeSolrResponse(2, [
-        { id: 'job1', url: 'https://test.com/1', cif: '33159615' },
-        { id: 'job2', url: 'https://test.com/2', cif: '33159615' }
+        { id: 'job1', url: 'https://test.com/1', cif: '46966293' },
+        { id: 'job2', url: 'https://test.com/2', cif: '46966293' }
       ]));
 
-      const result = await solr.querySOLR('33159615');
+      const result = await solr.querySOLR('46966293');
 
       expect(result).toHaveProperty('numFound', 2);
       expect(result).toHaveProperty('docs');
@@ -76,27 +76,27 @@ describe('solr.js', () => {
 
     it('should throw when SOLR_AUTH is missing', async () => {
       delete process.env.SOLR_AUTH;
-      await expect(solr.querySOLR('33159615')).rejects.toThrow('SOLR_AUTH not set in environment');
+      await expect(solr.querySOLR('46966293')).rejects.toThrow('SOLR_AUTH not set in environment');
       process.env.SOLR_AUTH = 'test:test';
     });
 
     it('should throw on HTTP error', async () => {
       mockFetch.mockResolvedValue(makeErrorResponse(500, 'Internal Server Error'));
 
-      await expect(solr.querySOLR('33159615')).rejects.toThrow('SOLR query error: 500');
+      await expect(solr.querySOLR('46966293')).rejects.toThrow('SOLR query error: 500');
     });
   });
 
   describe('queryCompanySOLR', () => {
     it('should return company data', async () => {
       mockFetch.mockResolvedValue(makeSolrResponse(1, [
-        { id: '33159615', company: 'EPAM SYSTEMS INTERNATIONAL SRL', brand: 'EPAM' }
+        { id: '46966293', company: 'WIZZ AIR MALTA LIMITED LUQA - SUCURSALA OTOPENI', brand: 'Wizz Air' }
       ]));
 
-      const result = await solr.queryCompanySOLR('id:33159615');
+      const result = await solr.queryCompanySOLR('id:46966293');
 
       expect(result.numFound).toBe(1);
-      expect(result.docs[0].brand).toBe('EPAM');
+      expect(result.docs[0].brand).toBe('Wizz Air');
     });
 
     it('should return empty when company not found', async () => {
@@ -110,7 +110,7 @@ describe('solr.js', () => {
     it('should throw on HTTP error', async () => {
       mockFetch.mockResolvedValue(makeErrorResponse(401, 'Unauthorized'));
 
-      await expect(solr.queryCompanySOLR('id:33159615')).rejects.toThrow('SOLR company query error: 401');
+      await expect(solr.queryCompanySOLR('id:46966293')).rejects.toThrow('SOLR company query error: 401');
     });
   });
 
@@ -160,24 +160,24 @@ describe('solr.js', () => {
     it('should delete all jobs for a CIF', async () => {
       mockFetch.mockResolvedValue(makeSolrResponse(0, []));
 
-      await expect(solr.deleteJobsByCIF('33159615')).resolves.not.toThrow();
+      await expect(solr.deleteJobsByCIF('46966293')).resolves.not.toThrow();
     });
 
     it('should throw on HTTP error', async () => {
       mockFetch.mockResolvedValue(makeErrorResponse(500, 'Error'));
 
-      await expect(solr.deleteJobsByCIF('33159615')).rejects.toThrow('SOLR delete error: 500');
+      await expect(solr.deleteJobsByCIF('46966293')).rejects.toThrow('SOLR delete error: 500');
     });
   });
 
   describe('Data Integrity', () => {
     it('should not have duplicate URLs for same CIF', async () => {
       mockFetch.mockResolvedValue(makeSolrResponse(2, [
-        { url: 'https://test.com/job1', title: 'Job 1', cif: '33159615' },
-        { url: 'https://test.com/job2', title: 'Job 2', cif: '33159615' }
+        { url: 'https://test.com/job1', title: 'Job 1', cif: '46966293' },
+        { url: 'https://test.com/job2', title: 'Job 2', cif: '46966293' }
       ]));
 
-      const result = await solr.querySOLR('33159615');
+      const result = await solr.querySOLR('46966293');
       const urls = result.docs.map(j => j.url);
       const uniqueUrls = new Set(urls);
 
@@ -186,11 +186,11 @@ describe('solr.js', () => {
 
     it('should have valid CIF format for all jobs', async () => {
       mockFetch.mockResolvedValue(makeSolrResponse(2, [
-        { url: 'https://test.com/1', title: 'Job 1', cif: '33159615' },
+        { url: 'https://test.com/1', title: 'Job 1', cif: '46966293' },
         { url: 'https://test.com/2', title: 'Job 2', cif: '12345678' }
       ]));
 
-      const result = await solr.querySOLR('33159615');
+      const result = await solr.querySOLR('46966293');
 
       for (const job of result.docs) {
         expect(job.cif).toMatch(/^\d{8}$/);
@@ -213,12 +213,12 @@ describe('solr.js', () => {
       const validStatuses = ['scraped', 'tested', 'verified', 'published'];
 
       mockFetch.mockResolvedValue(makeSolrResponse(3, [
-        { url: 'https://test.com/1', title: 'Job 1', cif: '33159615', status: 'scraped' },
-        { url: 'https://test.com/2', title: 'Job 2', cif: '33159615', status: 'verified' },
-        { url: 'https://test.com/3', title: 'Job 3', cif: '33159615', status: 'published' }
+        { url: 'https://test.com/1', title: 'Job 1', cif: '46966293', status: 'scraped' },
+        { url: 'https://test.com/2', title: 'Job 2', cif: '46966293', status: 'verified' },
+        { url: 'https://test.com/3', title: 'Job 3', cif: '46966293', status: 'published' }
       ]));
 
-      const result = await solr.querySOLR('33159615');
+      const result = await solr.querySOLR('46966293');
 
       for (const job of result.docs) {
         expect(validStatuses).toContain(job.status);

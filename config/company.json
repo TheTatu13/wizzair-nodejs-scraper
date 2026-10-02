@@ -1,11 +1,10 @@
 {
-  "cif": "33159615",
-  "legalName": "EPAM SYSTEMS INTERNATIONAL SRL",
-  "brand": "EPAM",
-  "website": "https://www.epam.com",
-  "careerUrl": "https://careers.epam.com",
-  "apiBase": "https://careers.epam.com",
-  "apiCountryId": "8150000000000001155",
-  "defaultLocation": "București",
-  "scraperFile": "https://raw.githubusercontent.com/TheTatu13/epam-systems-international-srl-nodejs-scraper/main/.github/workflows/job-seeker-ro-spider.yml"
+  "cif": "46966293",
+  "legalName": "WIZZ AIR MALTA LIMITED LUQA - SUCURSALA OTOPENI",
+  "brand": "Wizz Air",
+  "website": "https://wizzair.com",
+  "careerUrl": "https://careers.wizzair.com",
+  "apiBase": "https://careers.wizzair.com",
+  "defaultLocation": "Otopeni",
+  "scraperFile": "https://raw.githubusercontent.com/TheTatu13/wizzair-nodejs-scraper/main/.github/workflows/job-seeker-ro-spider.yml"
 }

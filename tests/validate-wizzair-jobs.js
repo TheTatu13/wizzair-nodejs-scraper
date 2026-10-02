@@ -1,5 +1,5 @@
 /**
- * EPAM-Specific Job URL Validator (fast, used by CI)
+ * Wizz Air-Specific Job URL Validator (fast, used by CI)
  *
  * Quick nightly cleanup pass over jobs in SOLR. Uses HEAD requests only.
  * Called by .github/workflows/automation-testing.yml on the scheduled run.

@@ -17,7 +17,7 @@
  * - company: Stores company metadata
  */
 
-import fetch from "node-fetch";
+import { fetchWithRetry as fetch, isDryRun } from "./src/premium.js";
 import fs from "fs";
 import { loadEnvFile } from "node:process";
 
@@ -95,6 +95,7 @@ export async function querySOLR(cif) {
  * @param {Object} companyDoc - Company document with id, company, brand, status, location, etc.
  */
 export async function upsertCompany(companyDoc) {
+  if (isDryRun()) { console.log('[dry-run] upsertCompany skipped'); return; }
   const AUTH = getSolrAuth();
 
   const params = new URLSearchParams({ commit: "true" });
@@ -121,7 +122,7 @@ export async function upsertCompany(companyDoc) {
 
 /**
  * Queries company data from Solr company core
- * @param {string} companyQuery - Solr query string (e.g., "company:EPAM*" or "id:33159615")
+ * @param {string} companyQuery - Solr query string (e.g., "company:Wizz Air*" or "id:46966293")
  * @returns {Promise<Object>} - Solr response with company docs
  */
 export async function queryCompanySOLR(companyQuery) {
@@ -159,6 +160,7 @@ export async function queryCompanySOLR(companyQuery) {
  * @param {string} cif - Company CIF to delete jobs for
  */
 export async function deleteJobsByCIF(cif) {
+  if (isDryRun()) { console.log('[dry-run] deleteJobsByCIF skipped'); return; }
   const AUTH = getSolrAuth();
 
   const params = new URLSearchParams({ commit: "true" });
@@ -192,6 +194,7 @@ export async function deleteJobsByCIF(cif) {
  * @param {string} url - Job URL to delete
  */
 export async function deleteJobByUrl(url) {
+  if (isDryRun()) { console.log('[dry-run] deleteJobByUrl skipped'); return; }
   const AUTH = getSolrAuth();
 
   const params = new URLSearchParams({ commit: "true" });
@@ -226,6 +229,7 @@ export async function deleteJobByUrl(url) {
  * @param {Array} jobs - Array of job objects to upsert
  */
 export async function upsertJobs(jobs) {
+  if (isDryRun()) { console.log('[dry-run] upsertJobs skipped'); return; }
   const AUTH = getSolrAuth();
 
   const params = new URLSearchParams({ commit: "true" });
@@ -376,7 +380,7 @@ async function runExtract(cif) {
 async function runCompanyQuery(args) {
   console.log("=== Query Company in SOLR ===\n");
   
-  const query = args[1] || "company:EPAM*";
+  const query = args[1] || "company:Wizz Air*";
   console.log(`Query: ${query}`);
   
   const result = await queryCompanySOLR(query);
