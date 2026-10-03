@@ -22,7 +22,7 @@ job_seeker_ro_spider
 3. **Scrape-uiește job-urile** — extrage lista completă de job-uri din API-ul public Wizz Air Careers, filtrat pe România
 4. **Transformă datele** — normalizează locațiile (doar orașe românești), tag-urile (lowercase), workmode-ul (remote/on-site/hybrid)
 5. **Stochează în SOLR** — upsert în `job` core (job-urile) și `company` core (datele companiei cu adresa completă)
-6. **Generează docs/jobs.md** — fișier markdown cu informații companie + toate job-urile curente, publicat pe [GitHub Pages](https://thetatu13.github.io/wizzair-nodejs-scraper/jobs.md)
+6. **Generează docs/jobs.md** — fișier markdown cu informații companie + toate job-urile curente, publicat pe [GitHub Pages](https://peviitor-scrapers.github.io/wizzair-nodejs-scraper/jobs.md)
 
 ## Structură proiect
 
@@ -73,12 +73,12 @@ Acest template a fost folosit pentru a deriva scraper-e pentru alte companii:
 
 | Repo | Companie | CIF | Metodă | Status |
 |------|----------|-----|--------|--------|
-| [mejix-srl-nodejs-scraper](https://github.com/TheTatu13/mejix-srl-nodejs-scraper) | MEJIX SRL | 17372688 | HTML scraping (cheerio) | ✅ Live |
-| [talent-matchmakers-srl-nodejs-scraper](https://github.com/TheTatu13/talent-matchmakers-srl-nodejs-scraper) | TALENT MATCHMAKERS S.R.L. | 38460545 | Teamtailor HTML (cheerio) | ✅ Live |
-| [artsoft-consult-srl-nodejs-scraper](https://github.com/TheTatu13/artsoft-consult-srl-nodejs-scraper) | ARTSOFT CONSULT SRL | 15997630 | HTML scraping (cheerio) | ✅ Live |
-| [rapel-srl-nodejs-scraper](https://github.com/TheTatu13/rapel-srl-nodejs-scraper) | RAPEL SRL | 5665609 | jobRapid.ro HTML + ANOFM API | ✅ Live |
-| [continental-hotels-srl-nodejs-scraper](https://github.com/TheTatu13/continental-hotels-srl-nodejs-scraper) | CONTINENTAL HOTELS SA | 1559737 | POST AJAX → HTML (cheerio) | ✅ Live |
-| [coera-bc-srl-nodejs-scraper](https://github.com/TheTatu13/coera-bc-srl-nodejs-scraper) | COERA BC SRL | 32519996 | HTML scraping (cheerio) | ✅ Live |
+| [mejix-srl-nodejs-scraper](https://github.com/peviitor-scrapers/mejix-srl-nodejs-scraper) | MEJIX SRL | 17372688 | HTML scraping (cheerio) | ✅ Live |
+| [talent-matchmakers-srl-nodejs-scraper](https://github.com/peviitor-scrapers/talent-matchmakers-srl-nodejs-scraper) | TALENT MATCHMAKERS S.R.L. | 38460545 | Teamtailor HTML (cheerio) | ✅ Live |
+| [artsoft-consult-srl-nodejs-scraper](https://github.com/peviitor-scrapers/artsoft-consult-srl-nodejs-scraper) | ARTSOFT CONSULT SRL | 15997630 | HTML scraping (cheerio) | ✅ Live |
+| [rapel-srl-nodejs-scraper](https://github.com/peviitor-scrapers/rapel-srl-nodejs-scraper) | RAPEL SRL | 5665609 | jobRapid.ro HTML + ANOFM API | ✅ Live |
+| [continental-hotels-srl-nodejs-scraper](https://github.com/peviitor-scrapers/continental-hotels-srl-nodejs-scraper) | CONTINENTAL HOTELS SA | 1559737 | POST AJAX → HTML (cheerio) | ✅ Live |
+| [coera-bc-srl-nodejs-scraper](https://github.com/peviitor-scrapers/coera-bc-srl-nodejs-scraper) | COERA BC SRL | 32519996 | HTML scraping (cheerio) | ✅ Live |
 
 **Pitfall #12 — ANOFM job scraping by CIF:** API-ul public ANOFM (`/api/entity/vw_public_job_posting`) oferă job-uri gratis filtrate pe CIF. Adăugați `searchANOFM(cif)` în scraper pentru a nu pierde job-uri de pe această platformă. Location se returnează ca array (`[loc]`).
 

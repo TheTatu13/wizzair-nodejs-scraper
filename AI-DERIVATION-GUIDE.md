@@ -33,7 +33,7 @@ Before starting, confirm:
 3. **Target site is understood** — fetch the career page first to identify:
    - JSON API? HTML scrape with cheerio? POST AJAX returning HTML?
    - Pagination? Filters? Required headers/cookies?
-4. **EPAM template is in `is_template: true` state** (check via `gh api repos/sebiboga/epam-systems-international-srl-nodejs-scraper -q .is_template`)
+4. **EPAM template is in `is_template: true` state** (check via `gh api repos/peviitor-scrapers/epam-systems-international-srl-nodejs-scraper -q .is_template`)
 
 ---
 
@@ -43,7 +43,7 @@ Before starting, confirm:
 
 ```bash
 gh repo create sebiboga/<slug>-nodejs-scraper \
-  --template sebiboga/epam-systems-international-srl-nodejs-scraper \
+  --template peviitor-scrapers/epam-systems-international-srl-nodejs-scraper \
   --public \
   --description "Scraper automat pentru locurile de muncă <LEGAL_NAME> (CIF: <CIF>) — extrage de pe <CAREER_URL> și publică pe peviitor.ro"
 ```
@@ -52,7 +52,7 @@ gh repo create sebiboga/<slug>-nodejs-scraper \
 
 ```bash
 gh api repos/sebiboga/<slug>-nodejs-scraper -q '.template_repository.full_name'
-# expect: sebiboga/epam-systems-international-srl-nodejs-scraper
+# expect: peviitor-scrapers/epam-systems-international-srl-nodejs-scraper
 ```
 
 If the badge is missing → the repo was created without `--template`. Delete and retry.
@@ -60,7 +60,7 @@ If the badge is missing → the repo was created without `--template`. Delete an
 ### 2.2 Clone locally
 
 ```bash
-git clone https://github.com/sebiboga/<slug>-nodejs-scraper.git
+git clone https://github.com/peviitor-scrapers/<slug>-nodejs-scraper.git
 cd <slug>-nodejs-scraper
 ```
 
@@ -114,7 +114,7 @@ gh repo delete sebiboga/<slug>-nodejs-scraper --yes
   "apiEndpoint": "<optional, e.g. /_ajax/get-job-list.php>",
   "apiCountryId": "<optional, only if site uses country IDs>",
   "defaultLocation": "<city>",
-  "scraperFile": "https://raw.githubusercontent.com/sebiboga/<slug>-nodejs-scraper/main/.github/workflows/job-seeker-ro-spider.yml"
+  "scraperFile": "https://raw.githubusercontent.com/peviitor-scrapers/<slug>-nodejs-scraper/main/.github/workflows/job-seeker-ro-spider.yml"
 }
 ```
 
@@ -270,7 +270,7 @@ gh repo edit sebiboga/<slug>-nodejs-scraper \
 
 # Homepage URL (will be set after Pages is enabled)
 gh repo edit sebiboga/<slug>-nodejs-scraper \
-  --homepage "https://sebiboga.github.io/<slug>-nodejs-scraper/"
+  --homepage "https://peviitor-scrapers.github.io/<slug>-nodejs-scraper/"
 
 # Enable GitHub Pages from /docs on main
 gh api -X POST repos/sebiboga/<slug>-nodejs-scraper/pages \
@@ -306,7 +306,7 @@ Probe your scraping logic against the real site to confirm at least one job is p
 git add -A
 git commit -m "feat: convert template into <COMPANY> scraper
 
-Derived from sebiboga/epam-systems-international-srl-nodejs-scraper."
+Derived from peviitor-scrapers/epam-systems-international-srl-nodejs-scraper."
 git push
 
 # Trigger CI to verify
@@ -326,7 +326,7 @@ gh workflow run job-seeker-ro-spider.yml --repo sebiboga/<slug>-nodejs-scraper
 After CI is green, add the new repo to EPAM's README:
 
 ```markdown
-| [<slug>-nodejs-scraper](https://github.com/sebiboga/<slug>-nodejs-scraper) | <Legal Name> | <CIF> | <Method, e.g. HTML/cheerio> | ✅ Live |
+| [<slug>-nodejs-scraper](https://github.com/peviitor-scrapers/<slug>-nodejs-scraper) | <Legal Name> | <CIF> | <Method, e.g. HTML/cheerio> | ✅ Live |
 ```
 
 Plus `CONTRIBUTING.md`'s "Validated in production" callout (if it lists derivatives).
@@ -468,13 +468,13 @@ When the fix is template-wide (would benefit ALL derived scrapers), file in EPAM
 
 | Repo | Method | CIF | Notable | Issues |
 |------|--------|-----|---------|--------|
-| [epam-systems-international-srl-nodejs-scraper](https://github.com/sebiboga/epam-systems-international-srl-nodejs-scraper) | JSON API | 33159615 | Template (this repo) | — |
-| [mejix-srl-nodejs-scraper](https://github.com/sebiboga/mejix-srl-nodejs-scraper) | HTML/cheerio (single-page) | 17372688 | First derivative — validated template works | — |
-| [talent-matchmakers-srl-nodejs-scraper](https://github.com/sebiboga/talent-matchmakers-srl-nodejs-scraper) | Teamtailor HTML | 38460545 | — | — |
-| [artsoft-consult-srl-nodejs-scraper](https://github.com/sebiboga/artsoft-consult-srl-nodejs-scraper) | HTML/cheerio | 15997630 | — | — |
-| [continental-hotels-srl-nodejs-scraper](https://github.com/sebiboga/continental-hotels-srl-nodejs-scraper) | POST AJAX → HTML | 1559737 (7 digits!) | First SA (not SRL), exposed CIF regex bug | [#5](https://github.com/sebiboga/continental-hotels-srl-nodejs-scraper/issues/5), [#6](https://github.com/sebiboga/continental-hotels-srl-nodejs-scraper/issues/6), [#7](https://github.com/sebiboga/continental-hotels-srl-nodejs-scraper/issues/7), [#9](https://github.com/sebiboga/continental-hotels-srl-nodejs-scraper/issues/9) |
-| [coera-bc-srl-nodejs-scraper](https://github.com/sebiboga/coera-bc-srl-nodejs-scraper) | HTML/cheerio | 32519996 | First derivation following AI-DERIVATION-GUIDE end-to-end (zero CI surprises). Title-suffix city extraction pattern (`"Title \| City1 & City2"`). | — |
-| [rapel-srl-nodejs-scraper](https://github.com/sebiboga/rapel-srl-nodejs-scraper) | jobRapid.ro HTML | 5665609 | jobRapid.ro multi-page, SOLR `_version_` conflict found & fixed | [#1](https://github.com/sebiboga/rapel-srl-nodejs-scraper/issues/1) |
+| [epam-systems-international-srl-nodejs-scraper](https://github.com/peviitor-scrapers/epam-systems-international-srl-nodejs-scraper) | JSON API | 33159615 | Template (this repo) | — |
+| [mejix-srl-nodejs-scraper](https://github.com/peviitor-scrapers/mejix-srl-nodejs-scraper) | HTML/cheerio (single-page) | 17372688 | First derivative — validated template works | — |
+| [talent-matchmakers-srl-nodejs-scraper](https://github.com/peviitor-scrapers/talent-matchmakers-srl-nodejs-scraper) | Teamtailor HTML | 38460545 | — | — |
+| [artsoft-consult-srl-nodejs-scraper](https://github.com/peviitor-scrapers/artsoft-consult-srl-nodejs-scraper) | HTML/cheerio | 15997630 | — | — |
+| [continental-hotels-srl-nodejs-scraper](https://github.com/peviitor-scrapers/continental-hotels-srl-nodejs-scraper) | POST AJAX → HTML | 1559737 (7 digits!) | First SA (not SRL), exposed CIF regex bug | [#5](https://github.com/peviitor-scrapers/continental-hotels-srl-nodejs-scraper/issues/5), [#6](https://github.com/peviitor-scrapers/continental-hotels-srl-nodejs-scraper/issues/6), [#7](https://github.com/peviitor-scrapers/continental-hotels-srl-nodejs-scraper/issues/7), [#9](https://github.com/peviitor-scrapers/continental-hotels-srl-nodejs-scraper/issues/9) |
+| [coera-bc-srl-nodejs-scraper](https://github.com/peviitor-scrapers/coera-bc-srl-nodejs-scraper) | HTML/cheerio | 32519996 | First derivation following AI-DERIVATION-GUIDE end-to-end (zero CI surprises). Title-suffix city extraction pattern (`"Title \| City1 & City2"`). | — |
+| [rapel-srl-nodejs-scraper](https://github.com/peviitor-scrapers/rapel-srl-nodejs-scraper) | jobRapid.ro HTML | 5665609 | jobRapid.ro multi-page, SOLR `_version_` conflict found & fixed | [#1](https://github.com/peviitor-scrapers/rapel-srl-nodejs-scraper/issues/1) |
 
 Read the linked Continental issues — they are the most detailed real-world record of pitfalls.
 
@@ -485,23 +485,23 @@ Read the linked Continental issues — they are the most detailed real-world rec
 This guide is a synthesis. The underlying source-of-truth issues are:
 
 **EPAM template:**
-- [#34](https://github.com/sebiboga/epam-systems-international-srl-nodejs-scraper/issues/34) — Extract config into a single file (the "single source of truth" principle)
-- [#35](https://github.com/sebiboga/epam-systems-international-srl-nodejs-scraper/issues/35) — Shared validator module (`src/job-validator.js`)
-- [#36](https://github.com/sebiboga/epam-systems-international-srl-nodejs-scraper/issues/36) — Derive a second scraper (validation)
-- [#37](https://github.com/sebiboga/epam-systems-international-srl-nodejs-scraper/issues/37) — Sync with remote on PR runs
-- [#38](https://github.com/sebiboga/epam-systems-international-srl-nodejs-scraper/issues/38) — Sync ordering before npm install
+- [#34](https://github.com/peviitor-scrapers/epam-systems-international-srl-nodejs-scraper/issues/34) — Extract config into a single file (the "single source of truth" principle)
+- [#35](https://github.com/peviitor-scrapers/epam-systems-international-srl-nodejs-scraper/issues/35) — Shared validator module (`src/job-validator.js`)
+- [#36](https://github.com/peviitor-scrapers/epam-systems-international-srl-nodejs-scraper/issues/36) — Derive a second scraper (validation)
+- [#37](https://github.com/peviitor-scrapers/epam-systems-international-srl-nodejs-scraper/issues/37) — Sync with remote on PR runs
+- [#38](https://github.com/peviitor-scrapers/epam-systems-international-srl-nodejs-scraper/issues/38) — Sync ordering before npm install
 
 **Continental Hotels (deepest learning ground):**
-- [#1](https://github.com/sebiboga/continental-hotels-srl-nodejs-scraper/issues/1) — Post-creation tracking
-- [#3](https://github.com/sebiboga/continental-hotels-srl-nodejs-scraper/issues/3) — Typo from sed + ANAF instability
-- [#5](https://github.com/sebiboga/continental-hotels-srl-nodejs-scraper/issues/5) — 4 distinct bulk-sed bugs
-- [#6](https://github.com/sebiboga/continental-hotels-srl-nodejs-scraper/issues/6) — lastScraped format drift
-- [#7](https://github.com/sebiboga/continental-hotels-srl-nodejs-scraper/issues/7) — E2E timeout from Azure
-- [#9](https://github.com/sebiboga/continental-hotels-srl-nodejs-scraper/issues/9) — CIF format regex
+- [#1](https://github.com/peviitor-scrapers/continental-hotels-srl-nodejs-scraper/issues/1) — Post-creation tracking
+- [#3](https://github.com/peviitor-scrapers/continental-hotels-srl-nodejs-scraper/issues/3) — Typo from sed + ANAF instability
+- [#5](https://github.com/peviitor-scrapers/continental-hotels-srl-nodejs-scraper/issues/5) — 4 distinct bulk-sed bugs
+- [#6](https://github.com/peviitor-scrapers/continental-hotels-srl-nodejs-scraper/issues/6) — lastScraped format drift
+- [#7](https://github.com/peviitor-scrapers/continental-hotels-srl-nodejs-scraper/issues/7) — E2E timeout from Azure
+- [#9](https://github.com/peviitor-scrapers/continental-hotels-srl-nodejs-scraper/issues/9) — CIF format regex
 
 ### RAPEL SRL (issue #1, #2)
-- [#1](https://github.com/sebiboga/rapel-srl-nodejs-scraper/issues/1) — SOLR `_version_` 409 on re-upsert (Pitfall #11)
-- [#2](https://github.com/sebiboga/rapel-srl-nodejs-scraper/issues/2) — ANOFM job scraping by CIF (Pitfall #12)
+- [#1](https://github.com/peviitor-scrapers/rapel-srl-nodejs-scraper/issues/1) — SOLR `_version_` 409 on re-upsert (Pitfall #11)
+- [#2](https://github.com/peviitor-scrapers/rapel-srl-nodejs-scraper/issues/2) — ANOFM job scraping by CIF (Pitfall #12)
 
 ---
 
