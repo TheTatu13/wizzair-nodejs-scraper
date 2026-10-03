@@ -8,13 +8,14 @@ import companyConfig from '../../config/company.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, '../../.env.local') });
 
-const HAS_SOLR = !!process.env.SOLR_AUTH;
+// Live API tests hit api.peviitor.ro (no credential needed) -- opt in explicitly.
+const HAS_SOLR = !!process.env.RUN_LIVE_API_TESTS;
 
 function itIfSolr(name, fn, timeout) {
   if (HAS_SOLR) {
     return it(name, fn, timeout);
   }
-  return it.skip(`${name} (skipped: SOLR_AUTH not set)`, fn, timeout);
+  return it.skip(`${name} (skipped: set RUN_LIVE_API_TESTS=1 to run)`, fn, timeout);
 }
 
 async function checkAnafAvailability() {
@@ -37,12 +38,6 @@ function itIfAnaf(name, fn, timeout) {
   }
   return it.skip(`${name} (skipped: ANAF unavailable)`, fn, timeout);
 }
-
-beforeAll(() => {
-  if (HAS_SOLR) {
-    process.env.SOLR_AUTH = process.env.SOLR_AUTH;
-  }
-});
 
 const COMPANY_CIF = companyConfig.cif;
 
@@ -123,10 +118,9 @@ describe('Integration: API Workflow', () => {
     });
 
     itIfSolr('should query company core by ID', async () => {
-      const result = await solr.queryCompanySOLR(`id:${COMPANY_CIF}`);
+      const wizzair = await solr.getCompanyByCif(COMPANY_CIF);
 
-      expect(result.numFound).toBe(1);
-      const wizzair = result.docs[0];
+      expect(wizzair).not.toBeNull();
       expect(wizzair.id).toBe(COMPANY_CIF);
       expect(wizzair.company).toBe('WIZZ AIR MALTA LIMITED LUQA - SUCURSALA OTOPENI');
       expect(wizzair.brand).toBe('Wizz Air');
@@ -136,8 +130,7 @@ describe('Integration: API Workflow', () => {
     }, 15000);
 
     itIfSolr('should have required company model fields', async () => {
-      const result = await solr.queryCompanySOLR(`id:${COMPANY_CIF}`);
-      const wizzair = result.docs[0];
+      const wizzair = await solr.getCompanyByCif(COMPANY_CIF);
 
       expect(wizzair).toHaveProperty('id', COMPANY_CIF);
       expect(wizzair).toHaveProperty('company');
@@ -157,8 +150,7 @@ describe('Integration: API Workflow', () => {
     }, 15000);
 
     itIfSolr('should have optional field (group) if present', async () => {
-      const result = await solr.queryCompanySOLR(`id:${COMPANY_CIF}`);
-      const wizzair = result.docs[0];
+      const wizzair = await solr.getCompanyByCif(COMPANY_CIF);
 
       if (wizzair.group !== undefined) {
         expect(typeof wizzair.group).toBe('string');
@@ -252,10 +244,10 @@ describe('Integration: API Workflow', () => {
       }
       const solrObj = await import('../../solr.js');
 
-      const solrResult = await solrObj.queryCompanySOLR(`id:${COMPANY_CIF}`);
-      expect(solrResult.numFound).toBe(1);
-      expect(solrResult.docs[0].id).toBe(COMPANY_CIF);
-      expect(solrResult.docs[0].company).toBe(companyConfig.legalName);
+      const doc = await solrObj.getCompanyByCif(COMPANY_CIF);
+      expect(doc).not.toBeNull();
+      expect(doc.id).toBe(COMPANY_CIF);
+      expect(doc.company).toBe(companyConfig.legalName);
     }, 30000);
 
     itIfSolr('should validate company and query SOLR for existing jobs', async () => {

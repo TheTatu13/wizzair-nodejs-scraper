@@ -31,21 +31,15 @@ jobs:
           npm run test:unit
           sed -i 's|<title>Test Report</title>|<title>Pre-scrape: Unit Tests — WIZZ AIR MALTA LIMITED LUQA - SUCURSALA OTOPENI</title>|;s|<h1 id="title">Test Report</h1>|<h1 id="title">Pre-scrape: Unit Tests — WIZZ AIR MALTA LIMITED LUQA - SUCURSALA OTOPENI</h1>|' test-report.html
           cp test-report.html docs/test-results/pre-scrape-unit.html || true
-        env:
-          SOLR_AUTH: ${{ secrets.SOLR_AUTH }}
 
       - name: Pre-scrape — Integration Tests
         run: |
           npm run test:integration
           sed -i 's|<title>Test Report</title>|<title>Pre-scrape: Integration Tests — WIZZ AIR MALTA LIMITED LUQA - SUCURSALA OTOPENI</title>|;s|<h1 id="title">Test Report</h1>|<h1 id="title">Pre-scrape: Integration Tests — WIZZ AIR MALTA LIMITED LUQA - SUCURSALA OTOPENI</h1>|' test-report.html
           cp test-report.html docs/test-results/pre-scrape-integration.html || true
-        env:
-          SOLR_AUTH: ${{ secrets.SOLR_AUTH }}
 
       - name: Run scraper
         run: npm run scrape
-        env:
-          SOLR_AUTH: ${{ secrets.SOLR_AUTH }}
           
       - name: Check for new jobs
         run: |
@@ -61,8 +55,6 @@ jobs:
           npm run test:e2e
           sed -i 's|<title>Test Report</title>|<title>Post-scrape: E2E Tests — WIZZ AIR MALTA LIMITED LUQA - SUCURSALA OTOPENI</title>|;s|<h1 id="title">Test Report</h1>|<h1 id="title">Post-scrape: E2E Tests — WIZZ AIR MALTA LIMITED LUQA - SUCURSALA OTOPENI</h1>|' test-report.html
           cp test-report.html docs/test-results/post-scrape.html || true
-        env:
-          SOLR_AUTH: ${{ secrets.SOLR_AUTH }}
 
       - name: Consistency Tests
         run: |
@@ -72,7 +64,6 @@ jobs:
         env:
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SOLR_AUTH: ${{ secrets.SOLR_AUTH }}
 
       - name: Upload test artifacts
         if: always()
