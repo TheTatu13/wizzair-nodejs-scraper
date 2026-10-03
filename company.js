@@ -161,7 +161,7 @@ function saveCompanyData(anafData, peviitorData) {
     
     // Summary with extracted key fields
     summary: {
-      company: anafData?.name || null,                    // Official company name
+      company: anafData?.name?.trim() || null,                    // Official company name
       cif: anafData?.cui?.toString() || null,              // CIF as string
       active: !anafData?.inactive,                          // Active status
       inactiveSince: anafData?.inactiveSince || null,       // When became inactive
@@ -252,7 +252,7 @@ export async function getCompanyData() {
     console.log(`Cached CUI: ${anafData.cui}`);
     console.log(`Cached status: ${anafData.inactive ? "INACTIVE" : "ACTIVE"}`);
 
-    const company = anafData.name.toUpperCase();
+    const company = anafData.name.trim().toUpperCase();
     const cif = anafData.cui.toString();
     const active = !anafData.inactive;
 
@@ -269,7 +269,7 @@ export async function getCompanyData() {
       console.log(`⚠️ ANAF unreachable (${err.message}) — falling back to stale cache`);
       const a = cachedData.anaf;
       return {
-        company: a.name.toUpperCase(),
+        company: a.name.trim().toUpperCase(),
         cif: a.cui.toString(),
         active: !a.inactive,
         anafData: a
@@ -289,7 +289,7 @@ export async function getCompanyData() {
   console.log(`ANAF returned CUI: ${anafData.cui}`);
   console.log(`ANAF status: ${anafData.inactive ? "INACTIVE" : "ACTIVE"}`);
 
-  const company = anafData.name.toUpperCase();
+  const company = anafData.name.trim().toUpperCase();
   const cif = anafData.cui.toString();
   const active = !anafData.inactive;
 

@@ -75,7 +75,7 @@ describe('Integration: API Workflow', () => {
 
       expect(data).toBeDefined();
       expect(data.cui).toBe(+COMPANY_CIF);
-      expect(data.name).toBe(companyConfig.legalName);
+      expect(data.name.trim()).toBe(companyConfig.legalName);
       expect(data).toHaveProperty('address');
       expect(data).toHaveProperty('registrationNumber');
       expect(data).toHaveProperty('caenCode');
