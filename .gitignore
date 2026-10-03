@@ -48,3 +48,5 @@ epam_response.json
 *.pem
 *.key
 credentials.json
+# runtime cache written by company.js / tests
+/company.json
