@@ -20,15 +20,19 @@ function itIfSolr(name, fn, timeout) {
 
 async function checkAnafAvailability() {
   try {
-    const res = await fetch('https://demoanaf.ro/api/company/' + companyConfig.cif, {
-      headers: { 'Accept': 'application/json' },
-      timeout: 5000
+    // Probe the official ANAF endpoint: the last link of the getCompanyFromANAF fallback chain.
+    const res = await fetch('https://webservicesp.anaf.ro/api/PlatitorTvaRest/v9/tva', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify([{ cui: 5665609, data: new Date().toISOString().slice(0, 10) }]),
+      signal: AbortSignal.timeout(10000)
     });
     return res.ok;
   } catch {
     return false;
   }
 }
+
 
 const HAS_ANAF = await checkAnafAvailability();
 
@@ -139,7 +143,7 @@ describe('E2E: Full Scraping Pipeline', () => {
       const anafData = await anaf.getCompanyFromANAF(TEST_CIF);
       expect(anafData).toBeDefined();
       expect(anafData.cui.toString()).toBe(TEST_CIF);
-      expect(anafData.name).toBe(companyConfig.legalName);
+      expect(anafData.name.trim()).toBe(companyConfig.legalName);
       expect(typeof anafData.inactive).toBe('boolean');
     }, 30000);
   });

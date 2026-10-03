@@ -20,15 +20,19 @@ function itIfSolr(name, fn, timeout) {
 
 async function checkAnafAvailability() {
   try {
-    const res = await fetch('https://demoanaf.ro/api/company/' + companyConfig.cif, {
-      headers: { 'Accept': 'application/json' },
-      timeout: 5000
+    // Probe the official ANAF endpoint: the last link of the getCompanyFromANAF fallback chain.
+    const res = await fetch('https://webservicesp.anaf.ro/api/PlatitorTvaRest/v9/tva', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify([{ cui: 5665609, data: new Date().toISOString().slice(0, 10) }]),
+      signal: AbortSignal.timeout(10000)
     });
     return res.ok;
   } catch {
     return false;
   }
 }
+
 
 const HAS_ANAF = await checkAnafAvailability();
 
@@ -225,12 +229,12 @@ describe('Integration: API Workflow', () => {
       expect(searchResults.length).toBeGreaterThan(0);
 
       const company = searchResults.find(c =>
-        c.name.toUpperCase().includes(companyConfig.brand) && c.statusLabel === 'Funcțiune'
+        c.cui.toString() === COMPANY_CIF && c.statusLabel === 'Funcțiune'
       );
       expect(company).toBeDefined();
 
       const anafData = await anaf.getCompanyFromANAF(company.cui.toString());
-      expect(anafData.name).toBe(companyConfig.legalName);
+      expect(anafData.name.trim()).toBe(companyConfig.legalName);
       expect(typeof anafData.inactive).toBe('boolean');
     }, 30000);
 
