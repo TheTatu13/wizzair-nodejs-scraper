@@ -238,7 +238,7 @@ export async function upsertJobs(jobs) {
 
   const params = new URLSearchParams({ commit: "true" });
 
-  const body = JSON.stringify(jobs);
+  const body = JSON.stringify(jobs.map(({ _version_, ...doc }) => doc));
 
   const res = await fetch(`${SOLR_URL}/update?${params}`, {
     method: "POST",
