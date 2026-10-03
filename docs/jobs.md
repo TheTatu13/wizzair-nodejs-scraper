@@ -1,4 +1,4 @@
-# WIZZ AIR MALTA LIMITED LUQA - SUCURSALA OTOPENI
+# WIZZ AIR MALTA LIMITED LUQA - SUCURSALA OTOPENI 
 
 ## Company Info
 
@@ -10,11 +10,11 @@
 | Location | JUD. ILFOV, ORŞ. OTOPENI, CAL. BUCUREŞTILOR, NR.224E, AEROPORTUL INTERNAŢIONAL HENRI COANDĂ. TERMINAL PLECĂRI I. ETAJ 2. BIROUL 1. 075150 |
 | Website | [https://wizzair.com](https://wizzair.com) |
 | Careers | [https://careers.wizzair.com](https://careers.wizzair.com) |
-| Last Scraped | 2026-10-02 |
+| Last Scraped | 2026-10-03 |
 
 ## Current Job Listings (1)
 
-_Generated: 2026-10-02T22:41:51.876Z_
+_Generated: 2026-10-03T14:20:15.315Z_
 
 ### Fleet Manager
 
